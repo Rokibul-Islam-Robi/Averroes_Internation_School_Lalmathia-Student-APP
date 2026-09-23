@@ -1,0 +1,13 @@
+
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.averroes.student_app",
+      "sha256_cert_fingerprints": [
+        "89:B3:F8:E5:16:5C:D7:61:F6:5D:AF:40:75:70:85:0C:36:E9:44:EE:6A:4A:FB:CA:33:85:EB:A0:47:EE:7C:C7"
+      ]
+    }
+  }
+]

@@ -1,0 +1,331 @@
+Averroes International School ERP
+Student Appointment API Documentation
+Mobile App Integration Guide
+Prepared from: student-appointment-module-update.zip  |  Version: 1.0  |  Date: 07 September 2026
+Purpose
+This document describes the student appointment API added to the existing Averroes mobile API. It is intended for the mobile app developer implementing appointment booking, appointment history, schedule updates, cancellation, and unread/update indicators in the student app.
+Integration note: The attached update ZIP does not include the existing api/student-api-common.php file. Therefore, the mobile app must continue using the same authentication mechanism, login response, request headers/cookies/token handling, and outer JSON success/error envelope already used by the current student mobile API. This document does not invent a new Bearer-token format.
+Integration note: The attached update ZIP does not include the existing api/student-api-common.php file. Therefore, the mobile app must continue using the same authentication mechanism, login response, request headers/cookies/token handling, and outer JSON success/error envelope already used by the current student mobile API. This document does not invent a new Bearer-token format.
+1. API Base and Routing
+The router accepts the normal /api/... paths. It also contains compatibility handling for /api/v1/student/... style paths. Use the same API base URL already configured in the current Averroes mobile app.
+Item | Value
+Item
+Value
+Primary router | api/index.php
+Primary router
+api/index.php
+Authentication | Existing student mobile API authentication via POST /api/login
+Authentication
+Existing student mobile API authentication via POST /api/login
+Content type for JSON requests | Use the same JSON request format currently used by the existing API
+Content type for JSON requests
+Use the same JSON request format currently used by the existing API
+Appointment handler | api/student-api-appointment-handlers.php
+Appointment handler
+api/student-api-appointment-handlers.php
+Database tables | student_appointments, student_appointment_logs
+Database tables
+student_appointments, student_appointment_logs
+2. Appointment Workflow
+Student loads eligible recipients and appointment-purpose options.
+Student submits an appointment request. New requests start with status requested.
+Teacher/Principal/Vice Principal or authorized school staff schedules, completes, or declines the request from the ERP portal.
+When the school updates the appointment, the API can return has_update = true until the student marks the update as read.
+The student may cancel an appointment while it is requested or scheduled, provided a scheduled appointment has not already started.
+3. Allowed Values
+Appointment Statuses
+Value | Display Label | Meaning
+Value
+Display Label
+Meaning
+requested | Requested | Submitted by student; waiting for school response.
+requested
+Requested
+Submitted by student; waiting for school response.
+scheduled | Scheduled | School has assigned a date/time and meeting details.
+scheduled
+Scheduled
+School has assigned a date/time and meeting details.
+completed | Completed | Appointment has been completed.
+completed
+Completed
+Appointment has been completed.
+declined | Declined | School cannot accept the appointment; teacher_response should explain why.
+declined
+Declined
+School cannot accept the appointment; teacher_response should explain why.
+cancelled | Cancelled | Student cancelled the request.
+cancelled
+Cancelled
+Student cancelled the request.
+Appointment Purposes
+Value | Label
+Value
+Label
+academic | Academic Discussion
+academic
+Academic Discussion
+student_welfare | Student Welfare
+student_welfare
+Student Welfare
+attendance | Attendance
+attendance
+Attendance
+discipline | Discipline
+discipline
+Discipline
+administrative | Administrative Matter
+administrative
+Administrative Matter
+other | Other
+other
+Other
+Meeting Modes (returned after school schedules)
+Value | Label
+Value
+Label
+in_person | In Person
+in_person
+In Person
+phone | Phone Call
+phone
+Phone Call
+online | Online Meeting
+online
+Online Meeting
+4. Endpoint Summary
+Method | Endpoint | Purpose
+Method
+Endpoint
+Purpose
+GET | /api/student/appointment-recipients | Load eligible teachers/Principal/Vice Principal and purpose options.
+GET
+/api/student/appointment-recipients
+Load eligible teachers/Principal/Vice Principal and purpose options.
+POST | /api/student/appointments | Submit a new appointment request.
+POST
+/api/student/appointments
+Submit a new appointment request.
+GET | /api/student/appointments | List the logged-in student’s appointments; supports status and pagination.
+GET
+/api/student/appointments
+List the logged-in student’s appointments; supports status and pagination.
+GET | /api/student/appointments/{id} | Load one appointment belonging to the logged-in student.
+GET
+/api/student/appointments/{id}
+Load one appointment belonging to the logged-in student.
+POST | /api/student/appointments/{id}/cancel | Cancel a requested/scheduled appointment if cancellation is still allowed.
+POST
+/api/student/appointments/{id}/cancel
+Cancel a requested/scheduled appointment if cancellation is still allowed.
+POST | /api/student/appointments/{id}/read | Mark the latest school update as read.
+POST
+/api/student/appointments/{id}/read
+Mark the latest school update as read.
+5. Endpoint Details
+GET  /api/student/appointment-recipients
+Returns employees currently eligible to receive student appointments and the valid appointment-purpose values.
+Authentication: Required (same student authentication as the existing API).
+Request parameters: None.
+Data payload shape:{  "recipients": [    {      "employee_id": 25,      "employee_uid": "EMP0025",      "name": "Example Teacher",      "designation": "Senior Teacher",      "department": {        "id": 4,        "name": "Academic"      }    }  ],  "purposes": [    {"value": "academic", "label": "Academic Discussion"},    {"value": "student_welfare", "label": "Student Welfare"}  ]}
+Recipient eligibility is generated from active employees who are Academic staff or whose designation contains teacher, principal, or head, and who can be matched to an active ERP user account.
+POST  /api/student/appointments
+Creates a new appointment request for the authenticated student.
+Request body fields:
+Field | Required | Type / Format | Rules
+Field
+Required
+Type / Format
+Rules
+recipient_employee_id | Yes | integer | Must be an employee returned by appointment-recipients. Alias employee_id is also accepted by backend.
+recipient_employee_id
+Yes
+integer
+Must be an employee returned by appointment-recipients. Alias employee_id is also accepted by backend.
+purpose | Yes | string | One of: academic, student_welfare, attendance, discipline, administrative, other.
+purpose
+Yes
+string
+One of: academic, student_welfare, attendance, discipline, administrative, other.
+subject | Yes | string | 5–180 characters.
+subject
+Yes
+string
+5–180 characters.
+details | Yes | string | 10–3000 characters. Backend also accepts reason as an alias.
+details
+Yes
+string
+10–3000 characters. Backend also accepts reason as an alias.
+preferred_date | Yes | YYYY-MM-DD | From today through the next 120 days, inclusive by validation intent.
+preferred_date
+Yes
+YYYY-MM-DD
+From today through the next 120 days, inclusive by validation intent.
+preferred_start_time | No | HH:MM or HH:MM:SS | If provided, must be valid 24-hour time.
+preferred_start_time
+No
+HH:MM or HH:MM:SS
+If provided, must be valid 24-hour time.
+preferred_end_time | No | HH:MM or HH:MM:SS | If both times are provided, end must be later than start.
+preferred_end_time
+No
+HH:MM or HH:MM:SS
+If both times are provided, end must be later than start.
+attendee_name | Yes | string | Required; maximum 150 characters.
+attendee_name
+Yes
+string
+Required; maximum 150 characters.
+attendee_relation | Yes | string | Required; maximum 50 characters.
+attendee_relation
+Yes
+string
+Required; maximum 50 characters.
+attendee_phone | Yes | string | Required; maximum 30 characters.
+attendee_phone
+Yes
+string
+Required; maximum 30 characters.
+Example request body:{  "recipient_employee_id": 25,  "purpose": "academic",  "subject": "Discussion about academic progress",  "details": "I would like to discuss the student’s recent academic progress and improvement plan.",  "preferred_date": "2026-09-15",  "preferred_start_time": "10:00",  "preferred_end_time": "10:30",  "attendee_name": "Parent Name",  "attendee_relation": "Father",  "attendee_phone": "01XXXXXXXXX"}
+Successful data payload:{  "appointment": { ...appointment object... }}HTTP status: 201Message: "Appointment request submitted."
+Business rule: a student can have at most five active appointments in requested or scheduled status. A sixth active request returns HTTP 409.
+GET  /api/student/appointments
+Lists appointments for the authenticated student.
+Query parameter | Required | Description
+Query parameter
+Required
+Description
+status | No | Filter by requested, scheduled, completed, declined, or cancelled. Invalid values return 422.
+status
+No
+Filter by requested, scheduled, completed, declined, or cancelled. Invalid values return 422.
+page | No | Uses the existing API pagination helper.
+page
+No
+Uses the existing API pagination helper.
+per_page | No | Uses the existing API pagination helper and existing limits.
+per_page
+No
+Uses the existing API pagination helper and existing limits.
+Example:GET /api/student/appointments?status=scheduled&page=1&per_page=20Data payload:{  "student": { ...existing student meta object... },  "appointments": [ ...appointment objects... ],  "pagination": { ...existing API pagination object... }}
+GET  /api/student/appointments/{id}
+Returns one appointment only if it belongs to the authenticated student.
+Example:GET /api/student/appointments/123Data payload:{  "appointment": { ...appointment object... }}Not found / does not belong to student: HTTP 404
+POST  /api/student/appointments/{id}/cancel
+Cancels an appointment owned by the authenticated student.
+Field | Required | Rules
+Field
+Required
+Rules
+reason | No | Cancellation reason; maximum 500 characters.
+reason
+No
+Cancellation reason; maximum 500 characters.
+cancellation_reason | No | Alternative field name accepted by backend.
+cancellation_reason
+No
+Alternative field name accepted by backend.
+Example request:POST /api/student/appointments/123/cancel{  "reason": "Parent will not be available on the scheduled date."}Successful data payload:{  "appointment": { ...updated appointment object with status "cancelled"... }}
+Cancellation is allowed only for requested or scheduled appointments. If a scheduled appointment’s start date/time is already reached, online cancellation is rejected with HTTP 409.
+POST  /api/student/appointments/{id}/read
+Marks the latest appointment notification/update as seen by the student.
+Request body: none required.
+Successful data payload:{  "appointment_id": 123,  "marked_read": true}
+Call this after the student opens/views an appointment update. The appointment object’s has_update flag is calculated from student_notified_at versus student_seen_at.
+6. Appointment Object Returned by the API
+{  "id": 123,  "appointment_no": "APT-202609-000123",  "recipient": {    "employee_id": 25,    "employee_uid": "EMP0025",    "name": "Example Teacher",    "designation": "Senior Teacher",    "department": "Academic"  },  "purpose": "academic",  "purpose_label": "Academic Discussion",  "subject": "Discussion about academic progress",  "details": "...",  "preferred": {    "date": "2026-09-15",    "start_time": "10:00",    "end_time": "10:30"  },  "attendee": {    "name": "Parent Name",    "relationship": "Father",    "phone": "01XXXXXXXXX"  },  "status": "scheduled",  "status_label": "Scheduled",  "schedule": {    "date": "2026-09-16",    "start_time": "11:00",    "end_time": "11:30",    "meeting_mode": "in_person",    "meeting_mode_label": "In Person",    "venue": "Principal Office",    "meeting_link": null  },  "teacher_response": "Please attend at the scheduled time.",  "cancellation_reason": null,  "has_update": true,  "requested_at": "2026-09-07 13:30:00",  "scheduled_at": "2026-09-08 09:15:00",  "completed_at": null,  "declined_at": null,  "cancelled_at": null,  "updated_at": "2026-09-08 09:15:00"}
+Important null handling: schedule is null until a scheduled date exists. Designation, department, venue, meeting_link, teacher_response, cancellation_reason, and lifecycle timestamps may also be null.
+7. HTTP Status / Error Cases
+HTTP | Typical condition
+HTTP
+Typical condition
+201 | Appointment created successfully.
+201
+Appointment created successfully.
+200 | Successful list/detail/cancel/read request.
+200
+Successful list/detail/cancel/read request.
+401 / existing auth code | Authentication failure according to the current student API common layer.
+401 / existing auth code
+Authentication failure according to the current student API common layer.
+404 | Appointment ID not found for this student.
+404
+Appointment ID not found for this student.
+405 | Wrong HTTP method.
+405
+Wrong HTTP method.
+409 | Business-state conflict, e.g. five active requests, appointment cannot be cancelled, appointment already started.
+409
+Business-state conflict, e.g. five active requests, appointment cannot be cancelled, appointment already started.
+422 | Validation failure, invalid status filter, invalid dates/times/text lengths/recipient/purpose.
+422
+Validation failure, invalid status filter, invalid dates/times/text lengths/recipient/purpose.
+503 | Appointment database schema is not installed / appointment service unavailable.
+503
+Appointment database schema is not installed / appointment service unavailable.
+500 | Unexpected server error; router returns a generic server error through the existing API error wrapper.
+500
+Unexpected server error; router returns a generic server error through the existing API error wrapper.
+The mobile app should display the server-provided error message from the existing API error envelope whenever safe/available, especially for 409 and 422 responses.
+8. Recommended Mobile UI Mapping
+Screen / Component | Recommended API usage
+Screen / Component
+Recommended API usage
+New Appointment | GET appointment-recipients, then POST appointments.
+New Appointment
+GET appointment-recipients, then POST appointments.
+My Appointments | GET appointments; optionally tabs/filters by status.
+My Appointments
+GET appointments; optionally tabs/filters by status.
+Appointment Detail | GET appointments/{id}.
+Appointment Detail
+GET appointments/{id}.
+Notification badge | Use has_update from list/detail.
+Notification badge
+Use has_update from list/detail.
+Open appointment update | POST appointments/{id}/read after displaying the updated schedule/response.
+Open appointment update
+POST appointments/{id}/read after displaying the updated schedule/response.
+Cancel button | Show for requested and scheduled; backend remains final authority on whether cancellation is allowed.
+Cancel button
+Show for requested and scheduled; backend remains final authority on whether cancellation is allowed.
+Scheduled appointment card | Display schedule date/time, meeting mode, venue or meeting link, and teacher_response.
+Scheduled appointment card
+Display schedule date/time, meeting mode, venue or meeting link, and teacher_response.
+Declined card | Display teacher_response prominently.
+Declined card
+Display teacher_response prominently.
+9. Developer Implementation Notes
+Do not hard-code recipient IDs. Always load them from GET /api/student/appointment-recipients.
+Do not hard-code display labels if avoidable; the API already returns purpose_label, status_label, and meeting_mode_label.
+Use the server as the source of truth for date and cancellation validation.
+Times in appointment payloads are returned as HH:MM when present.
+The generated appointment number format is APT-YYYYMM-###### based on the database appointment ID.
+All appointment list/detail operations are scoped to the authenticated student; the app should never send a student_id to access another student’s appointment.
+The recipient list is limited to active eligible academic/leadership staff with an active matched ERP user, so a staff member may not appear until their employee and user records are correctly linked.
+10. Source Files Reviewed
+File | Purpose
+File
+Purpose
+api/index.php | Registers and routes the new appointment endpoints.
+api/index.php
+Registers and routes the new appointment endpoints.
+api/student-api-appointment-handlers.php | Mobile API request handlers and response payload mapping.
+api/student-api-appointment-handlers.php
+Mobile API request handlers and response payload mapping.
+includes/student_appointments.php | Shared business rules, validation, recipient discovery, lifecycle/status logic.
+includes/student_appointments.php
+Shared business rules, validation, recipient discovery, lifecycle/status logic.
+2026-09-07_student_appointments.sql | Database schema, indexes, foreign keys, and permissions.
+2026-09-07_student_appointments.sql
+Database schema, indexes, foreign keys, and permissions.
+student/appointments.php | Student web portal flow used as supporting reference.
+student/appointments.php
+Student web portal flow used as supporting reference.
+teacher/appointments.php | Teacher-side scheduling flow used as supporting reference.
+teacher/appointments.php
+Teacher-side scheduling flow used as supporting reference.
+admin/students/student-appointments.php | Admin/IT appointment-management flow used as supporting reference.
+admin/students/student-appointments.php
+Admin/IT appointment-management flow used as supporting reference.

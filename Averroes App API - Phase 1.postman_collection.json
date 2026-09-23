@@ -1,0 +1,357 @@
+{
+  "info": {
+    "_postman_id": "92d2f331-7c51-45a3-b551-a2f8c2b2b22f",
+    "name": "Averroes App API - Phase 1",
+    "description": "Student routine, live class, smart classroom, and teacher material endpoints. Session APIs are intentionally excluded.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "35039635"
+  },
+  "item": [
+    {
+      "name": "Weekly Class Routine",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/student/routine",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "student",
+            "routine"
+          ]
+        },
+        "description": "Returns the authenticated student's weekly timetable, periods, subjects, teachers, rooms, and notes."
+      },
+      "response": []
+    },
+    {
+      "name": "Today's Live Classes",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/student/live-classes/today",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "student",
+            "live-classes",
+            "today"
+          ]
+        },
+        "description": "Returns today's non-cancelled live classes for the authenticated student's enrollment."
+      },
+      "response": []
+    },
+    {
+      "name": "Live Class Join Info",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/student/live-classes/{{live_class_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "student",
+            "live-classes",
+            "{{live_class_id}}"
+          ]
+        },
+        "description": "Returns one accessible live class. join_url is exposed only inside the permitted join window."
+      },
+      "response": []
+    },
+    {
+      "name": "Smart Classroom Content",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/student/smart-classroom?page=1&per_page=30",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "student",
+            "smart-classroom"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "per_page",
+              "value": "30"
+            },
+            {
+              "key": "subject_id",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "teacher_id",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Returns all published smart-classroom materials visible to the authenticated student."
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Material Classes",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/student/teacher-materials/classes",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "student",
+            "teacher-materials",
+            "classes"
+          ]
+        },
+        "description": "Returns subject/teacher groups with material and announcement counts."
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Shared Documents",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/student/teacher-materials/documents?page=1&per_page=30",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "student",
+            "teacher-materials",
+            "documents"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "per_page",
+              "value": "30"
+            },
+            {
+              "key": "subject_id",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "teacher_id",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Returns published class materials, class routines, and official documents."
+      },
+      "response": []
+    },
+    {
+      "name": "Teacher Announcements",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/student/teacher-materials/announcements?page=1&per_page=30",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "student",
+            "teacher-materials",
+            "announcements"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "per_page",
+              "value": "30"
+            },
+            {
+              "key": "subject_id",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "teacher_id",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Returns published teacher announcements visible to the authenticated student."
+      },
+      "response": []
+    },
+    {
+      "name": "Student Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "try {\r",
+              "    const res = pm.response.json();\r",
+              "    if (res.status === \"success\" && res.data && res.data.access_token) {\r",
+              "        pm.collectionVariables.set(\"student_access_token\", res.data.access_token);\r",
+              "        console.log(\"Token saved successfully!\");\r",
+              "    }\r",
+              "} catch (e) {\r",
+              "    console.log(\"Response was not JSON or Server Crashed (500)\");\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "packages": {},
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disabledSystemHeaders": {
+          "accept": true
+        }
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://averroesint.com/averroes_school_erp/api/login",
+          "protocol": "https",
+          "host": [
+            "averroesint",
+            "com"
+          ],
+          "path": [
+            "averroes_school_erp",
+            "api",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{student_access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "requests": {},
+        "exec": [
+          "pm.test('Response is JSON', function () { pm.response.to.be.json; });",
+          "pm.test('Response has standard envelope', function () {",
+          "  const body = pm.response.json();",
+          "  pm.expect(body).to.have.property('status');",
+          "  pm.expect(body).to.have.property('message');",
+          "  pm.expect(body).to.have.property('request_id');",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://averroesint.com/averroes_school_erp/api"
+    },
+    {
+      "key": "student_access_token",
+      "value": ""
+    },
+    {
+      "key": "live_class_id",
+      "value": "1"
+    }
+  ]
+}
