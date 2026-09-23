@@ -1,0 +1,22 @@
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// আধুনিক Gradle ভার্সনের জন্য বিল্ড ডিরেক্টরি সেট করার সঠিক ও নিরাপদ নিয়ম
+rootProject.layout.buildDirectory.set(rootProject.file("../build"))
+
+subprojects {
+    project.layout.buildDirectory.set(rootProject.layout.buildDirectory.dir(project.name))
+}
+
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+// ক্লিন টাস্কের আধুনিক ও পারফেক্ট রূপ
+tasks.register("clean", Delete) {
+    delete rootProject.layout.buildDirectory
+}

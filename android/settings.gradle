@@ -1,0 +1,38 @@
+pluginManagement {
+    def flutterSdkPath = {
+        def properties = new Properties()
+        def file = new File(settingsDir, "local.properties")
+        if (!file.exists()) {
+            file = new File(settingsDir, "../local.properties")
+        }
+        if (file.exists()) {
+            file.withReader('UTF-8') { reader -> properties.load(reader) }
+        }
+
+        def sdkPath = properties.getProperty('flutter.sdk')
+        if (sdkPath == null) {
+            sdkPath = System.getenv('FLUTTER_ROOT')
+        }
+        return sdkPath
+    }()
+
+    if (flutterSdkPath == null) {
+        throw new GradleException("flutter.sdk is not set in local.properties and FLUTTER_ROOT environment variable is missing.")
+    }
+
+    includeBuild("${flutterSdkPath}/packages/flutter_tools/gradle")
+
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+    id "com.android.application" version "8.11.1" apply false // ← AGP ভার্সন আপগ্রেড করা হলো
+    id "org.jetbrains.kotlin.android" version "2.3.10" apply false // ← কটলিন ভার্সন ২.৩.১০-এ আপগ্রেড করা হলো
+}
+
+include ':app'
